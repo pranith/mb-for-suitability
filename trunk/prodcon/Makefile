@@ -5,20 +5,17 @@ endif
 CXX = icc 
 CPPFLAGS = -Wall -openmp $(DEBUG) 
 
-EXEC = read1.exe read2.exe 
+EXEC = prodcon.exe
 
 all: $(EXEC)
 
 .PHONY: all 
 
-$(EXEC): %.exe : %.o main.o 
-		  $(CXX) $< -o $@ $(CPPFLAGS) main.o
+$(EXEC): %.exe : %.o 
+		  $(CXX) $< -o $@ $(CPPFLAGS) 
 
 $(OBJ): %.o : %.cpp main.cpp
 		  $(CXX) -o $@ -c $< $(CPPFLAGS)
-
-main.o: main.cpp 
-		  $(CXX) -c main.cpp $(CPPFLAGS)
 
 .PHONY: debug
 debug: clean
