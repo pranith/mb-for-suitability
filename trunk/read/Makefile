@@ -2,8 +2,9 @@ ifneq (DEBUG, "-g")
 	DEBUG += -O2
 endif
 
+IDIR = ../include
 CXX = icc 
-CPPFLAGS = -Wall -openmp $(DEBUG) 
+CPPFLAGS = -Wall -openmp $(DEBUG) -I$(IDIR)
 
 EXEC = read1.exe read2.exe 
 
