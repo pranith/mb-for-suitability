@@ -1,7 +1,7 @@
 /* 
  * memory is being shared 
  *
- * both the threads only READ from the shared memory location in this mb
+ * both the threads only WRITE to the shared memory location in this mb
  *
  * always create even number of threads when parallel
  *
@@ -18,7 +18,7 @@
 #define AI 0
 #define SHARED_PERCENT 10
 
-void stride(int* dest, int* src, int startindex, int endindex, long num_accesses, int64_t block_size, bool base)
+void stride(int* dest, int* src, int startindex, int endindex, long num_accesses, int64_t block_size)
 {
     int num_threads = omp_get_num_threads();
     int tid = omp_get_thread_num();
@@ -42,7 +42,7 @@ void stride(int* dest, int* src, int startindex, int endindex, long num_accesses
     for (long i = 0; i < num_accesses; i++)
     {
         // read from the shared memory
-        memcpy(local, dest+index, block_size);
+        memcpy(dest+index, local, block_size);
 
         index += block_len; 
         if (index > endindex)

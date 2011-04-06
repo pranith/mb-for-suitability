@@ -231,7 +231,7 @@ int main(int argc, char** argv)
                 cout << time_seq << ", ";
             }
 
-            cout << time_par / time_seq  << ", ";
+            cout << time_seq / time_par  << ", ";
         }
     }
 

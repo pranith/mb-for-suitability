@@ -31,7 +31,7 @@ int main(int argc, char** argv)
 {
     int64_t start_len = 1024 * 1024 * 2 / sizeof(int); // 2 MB
     int64_t dobase = 0;
-    int block_size = CACHE_LINE_SIZE;
+    int start_block_size = CACHE_LINE_SIZE;
     int max_threads = omp_get_max_threads();
     cout << "max_threads : " << max_threads << endl;
     int max_array_len = 1024 * 1024 * 1024 / sizeof(int); // 1024 MB
@@ -49,20 +49,13 @@ int main(int argc, char** argv)
     if (test)
     {
         start_len = max_array_len  / 2; 
-        block_size = max_block_size / 2; // 64B
+        start_block_size = max_block_size / 2; // 64B
     }
     assert(len     > 0);
     assert(dobase  == 0 ||
             dobase == 1);
 
-    if (dobase == 1)
-    {
-        float time_seq_base = Seq(len, block_size, dobase);
-        float time_par_base = Par(len, block_size, dobase);
-        cout << "Speedup : " << time_seq_base / time_par_base << endl;
-    }
-
-    for (; block_size < max_block_size; block_size *= 2)
+    for (int block_size = start_block_size; block_size < max_block_size; block_size *= 2)
     {
         cout << " size(MB),time(seq),num_threads=2; block_size="<< block_size \
             << ",num_threads=4; block_size="<< block_size << endl;
