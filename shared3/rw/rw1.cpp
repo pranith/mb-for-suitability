@@ -1,7 +1,7 @@
 /* 
  * memory is being shared 
  *
- * both the threads only WRITE to the shared memory location in this mb
+ * both the threads only READ from the shared memory location in this mb
  *
  * always create even number of threads when parallel
  *
@@ -37,18 +37,17 @@ void stride(int* dest, int* src, int startindex, int endindex, long num_accesses
 
     int sum = 0;
 
-    int local[block_len];
     int index = startindex;
     for (long i = 0; i < num_accesses; i++)
     {
-        // read from the shared memory
-        memcpy(dest+index, local, block_size);
+        // read and write from shared/unshared
+        memcpy(dest+index, src+index, block_size);
 
         index += block_len; 
         if (index > endindex)
             index = startindex;
 
-        sum += local[0];
+        sum += dest[index];
     }
 
     finaldest[omp_get_thread_num()] = sum;

@@ -3,10 +3,10 @@ ifneq (DEBUG, "-g")
 endif
 
 IDIR = ../include
-CXX = icc 
+CXX = icc
 CPPFLAGS = -Wall -openmp $(DEBUG) -I$(IDIR)
 
-EXEC = write1.exe write2.exe 
+EXEC = memread.exe memwrite.exe memrw.exe
 
 all: $(EXEC)
 

@@ -2,11 +2,11 @@ ifneq (DEBUG, "-g")
 	DEBUG += -O2
 endif
 
-IDIR = ../include
+IDIR = ../../include
 CXX = icc 
 CPPFLAGS = -Wall -openmp $(DEBUG) -I$(IDIR)
 
-EXEC = read1.exe read2.exe 
+EXEC = rw1.exe 
 
 all: $(EXEC)
 
