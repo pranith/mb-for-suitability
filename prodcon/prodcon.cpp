@@ -188,26 +188,43 @@ void consumer(long num_elements_to_consume)
 int main(int argc, char** argv)
 {
     pthread_t tp;
-    float time_seq = 1, time_par;
+    int num_times = 5;
+    float time_seq = 1, time_par = 0;
     int max_threads = omp_get_max_threads();
     cerr << "Max threads " << max_threads << endl;
+
     // start producer consumer
     for (BATCH_SIZE=4; BATCH_SIZE <= 128; BATCH_SIZE *=2)
     {
         cout << endl << BATCH_SIZE * sizeof(int) << ", " ;
+
         for(int num_threads = 1; num_threads < max_threads; num_threads++)
         {
             struct timeval before, after;
             omp_set_num_threads(num_threads);
+            time_par = 0;
 
-            recordTime(before);
-            pthread_create(&tp, NULL, producer, NULL);
-            consumer(ACCESSES/(num_threads));
-            pthread_join(tp, NULL);
-            recordTime(after);
+            for (int i = 0; i < num_times; i++)
+            {
+                recordTime(before);
 
-            time_par = diffTime(before, after, "");
+                pthread_create(&tp, NULL, producer, NULL);
+                consumer(ACCESSES/(num_threads));
+                pthread_join(tp, NULL);
 
+                recordTime(after);
+
+                time_par += diffTime(before, after, "");
+
+                // clear for next run
+                for (int i = 0; i < MAX_THREADS; i++)
+                    objects[i].clear();
+
+                producing_done = false;
+
+            }
+            // avg value
+            time_par = time_par / num_times;
             if (num_threads == 1)
             {
                 time_seq = time_par;
@@ -215,13 +232,6 @@ int main(int argc, char** argv)
             }
 
             cout << time_par / time_seq  << ", ";
-
-            for (int i = 0; i < MAX_THREADS; i++)
-                objects[i].clear();
-
-            producing_done = false;
-
-            sleep(3);
         }
     }
 

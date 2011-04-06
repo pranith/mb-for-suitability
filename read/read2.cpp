@@ -1,8 +1,8 @@
 /* 
  * memory is being shared by all 4 threads
  *
- * access pattern is such that the shared data is mostly not accessed simulatenously
- * i.e., contention for the same data is very less
+ * access pattern is such that the shared data is mostly accessed simulatenously
+ * i.e., contention for the same data is very high
  * 
  * only reads in this mb
  */
@@ -47,7 +47,7 @@ void stride(int* dest, int* src, int startindex, int endindex, long num_accesses
     index = 0;
     for (long i = 0; i < num_accesses_shared; i++)
     {
-        memcpy(local, dest, block_size);
+        memcpy(local, dest+index, block_size);
 
         index += block_len;
 

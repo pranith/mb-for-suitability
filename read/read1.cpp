@@ -1,7 +1,11 @@
 /* 
  * memory is being shared 
  *
- * both the threads only READ from the same shared memory location in this mb
+ * both the threads only READ from the shared memory location in this mb
+ *
+ * always create even number of threads when parallel
+ *
+ * the pattern is such that the contention for shared memory is less
  */
 
 #include <omp.h>
@@ -38,7 +42,7 @@ void stride(int* dest, int* src, int startindex, int endindex, long num_accesses
     for (long i = 0; i < num_accesses; i++)
     {
         // read from the shared memory
-        memcpy(local, dest, block_size);
+        memcpy(local, dest+index, block_size);
 
         index += block_len; 
         if (index > endindex)
