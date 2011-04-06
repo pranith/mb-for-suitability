@@ -18,7 +18,7 @@
 #include <assert.h>
 #include <pthread.h>
 
-#include "../main.h"
+#include "main.h"
 
 #define MAX_ELEMENTS 1024
 // batch size is equal to a cache block size
