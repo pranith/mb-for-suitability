@@ -1,7 +1,7 @@
 /* 
  * memory is being shared 
  *
- * both the threads only READ from the shared memory location in this mb
+ * both the threads only WRITE to the shared memory location in this mb
  *
  * always create even number of threads when parallel
  *
