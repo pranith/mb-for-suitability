@@ -4,7 +4,7 @@
  * access pattern is such that the shared data is mostly accessed simulatenously
  * i.e., contention for the same data is very high
  * 
- * only reads in this mb
+ * only WRITEs in this mb
  */
 
 #include <omp.h>
