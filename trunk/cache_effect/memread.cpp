@@ -2,7 +2,7 @@
  *
  * try to maximize bandwidth by bombarding with memcpy
  *
- * read from a range of shared memory
+ * working set size <= cache size
  */
 
 #include <omp.h>
