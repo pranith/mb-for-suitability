@@ -1,6 +1,8 @@
-/* memset.cpp
+/* memrw.cpp
  *
- * try to maximize bandwidth by bombarding with memsets
+ * try to maximize bandwidth by bombarding with memcpy
+ *
+ * alternating read and write accesses to the shared memory
  */
 
 #include <omp.h>

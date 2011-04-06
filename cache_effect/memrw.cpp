@@ -1,8 +1,8 @@
-/* memread.cpp
+/* memrw.cpp
  *
  * try to maximize bandwidth by bombarding with memcpy
  *
- * read from a range of shared memory
+ * alternate read and write to a memory range
  */
 
 #include <omp.h>
@@ -23,13 +23,21 @@ void stride(int* dest, int* src, int startindex, int endindex, long num_accesses
     int block_len = block_size / sizeof(int);
 
     int local[block_len];
+    bool mode = 0;
 
     for (long i = 0; i < num_accesses; i++)
     {
         // copy the block of memory
-        memcpy(local, src + index, block_size);
-
-        sum += local[0];
+        if (mode)
+        {
+            memcpy(local, src + index, block_size);
+            sum += local[0];
+        }
+        else
+        {
+            memcpy(src+index, local, block_size);
+            sum += src[index];
+        }
 
         int ai_index = index;
         for (long j = 0; j < num_ops; j++)
@@ -46,6 +54,8 @@ void stride(int* dest, int* src, int startindex, int endindex, long num_accesses
         index += block_len;
         if (index > endindex - block_len)
             index = startindex;
+
+        mode = !mode;
     }
     finaldest[omp_get_thread_num()] = sum;
 
