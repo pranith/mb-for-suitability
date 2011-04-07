@@ -34,7 +34,7 @@ int main(int argc, char** argv)
     int max_threads = omp_get_max_threads();
     cout << "max_threads : " << max_threads << endl;
     int max_array_len = 1024 * 1024 * 18 / sizeof(int); // 18 MB
-    int max_block_size = 512;
+    int max_block_size = 256;
     int64_t len = start_len; // length of the array
 
     if (test)

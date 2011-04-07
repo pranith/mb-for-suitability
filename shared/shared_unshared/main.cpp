@@ -18,6 +18,8 @@
 #include <assert.h>
 
 #include "main.h"
+#undef ACCESSES
+#define ACCESSES 1000000000
 
 using namespace std;
 
@@ -34,7 +36,7 @@ int main(int argc, char** argv)
     int max_threads = omp_get_max_threads();
     cout << "max_threads : " << max_threads << endl;
     int max_array_len = 1024 * 1024 * 1024 / sizeof(int); // 1024 MB
-    int max_block_size = start_block_size * 2;//512;
+    int max_block_size = 256;
 
     int64_t len = start_len; // length of the array
     if (test)
@@ -51,16 +53,22 @@ int main(int argc, char** argv)
             for (int block_size = start_block_size; block_size < max_block_size; block_size *= 2)
             {
                 cout << "Shared accesses " << shared_acc << " Shared memory " << shared_mem << endl;
-                cout << " size(MB),num_threads=2; block_size="<< block_size * sizeof(int) \
-                    << ",num_threads=4; block_size="<< block_size * sizeof(int) << endl;
+                cout << " size(MB),time(seq),num_threads=2; block_size="<< block_size \
+                    << ",num_threads=4; block_size="<< block_size << endl;
                 for (len = start_len; len < max_array_len; len *= 2)
                 {
                     cout << (len * sizeof(int)) / (1024 * 1024); // printing size in MB
                     float time_seq = Seq(len, block_size, shared_acc, shared_mem);
+                    cout << ", " << time_seq;
                     for (int num_threads = 2; num_threads <= max_threads; num_threads *= 2)
                     {
+                        float time_par = 0;
+                        int num_tries = 3; // repeat exp for n times
                         omp_set_num_threads(num_threads);
-                        float time_par = Par(len, block_size, shared_acc, shared_mem);
+                        for (int i = 0; i < num_tries; i++)
+                            time_par += Par(len, block_size, shared_acc, shared_mem);
+
+                        time_par /= num_tries;
                         cout << ", " << time_seq / time_par;
                     }
                     cout << endl;

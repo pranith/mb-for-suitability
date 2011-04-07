@@ -2,7 +2,7 @@
 
 exec=`ls *.exe`
 
-export OMP_NUM_THREADS=4
+export OMP_NUM_THREADS=8
 for i in ${exec}
 do
     echo $i >> output.txt
