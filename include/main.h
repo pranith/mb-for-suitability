@@ -3,7 +3,7 @@
 
 #include "portability.h"
 
-#define ACCESSES 10000000000
+#define ACCESSES 1000000000
 #define MAX_THREADS 8
 #define CACHE_LINE_SIZE 64
 
