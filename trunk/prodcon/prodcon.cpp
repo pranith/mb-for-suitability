@@ -24,7 +24,7 @@
 // batch size is equal to a cache block size
 int BATCH_SIZE=16;
 #undef ACCESSES
-#define ACCESSES 1000000000
+#define ACCESSES 100000000
 //#define ACCESSES 10000
 
 using namespace std;
@@ -139,6 +139,12 @@ bool producing_done = false;
 
 void *producer(void *arg)
 {
+    kmp_affinity_mask_t mask;
+    kmp_create_affinity_mask(&mask);
+    if (kmp_set_affinity_mask_proc(0, &mask) != 0)
+    {
+        exit(1);
+    }
     long num_elements_to_produce = ACCESSES;
 
     int num_consumers = omp_get_max_threads();
@@ -153,6 +159,7 @@ void *producer(void *arg)
         }
     }
 
+    kmp_destroy_affinity_mask(&mask);
     producing_done = true;
     //cout << "producer thread exiting " << iter << endl;
     return NULL;
@@ -166,6 +173,15 @@ void consumer(long num_elements_to_consume)
     #pragma omp parallel for schedule(static)
     for (int i = 0; i < num_consumers; i++)
     {
+        int tid = omp_get_thread_num();
+        //printf("thread id %d\n", tid);
+        kmp_affinity_mask_t mask;
+        kmp_create_affinity_mask(&mask);
+        if (kmp_set_affinity_mask_proc(tid, &mask) != 0)
+        {
+            exit(1);
+        }
+
         while(1)
         {
             int tid = omp_get_thread_num();
@@ -181,6 +197,7 @@ void consumer(long num_elements_to_consume)
             if (objects[tid].elements_consumed() >= num_elements_to_consume)
                 break;
         }
+        kmp_destroy_affinity_mask(&mask);
     }
 
 }
@@ -193,6 +210,10 @@ int main(int argc, char** argv)
     int max_threads = omp_get_max_threads();
     cerr << "Max threads " << max_threads << endl;
 
+    #pragma omp parallel num_threads(7)
+    {
+        int test = 0;
+    }
     // start producer consumer
     for (BATCH_SIZE=4; BATCH_SIZE <= 128; BATCH_SIZE *=2)
     {
