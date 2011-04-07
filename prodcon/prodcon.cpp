@@ -177,7 +177,7 @@ void consumer(long num_elements_to_consume)
         //printf("thread id %d\n", tid);
         kmp_affinity_mask_t mask;
         kmp_create_affinity_mask(&mask);
-        if (kmp_set_affinity_mask_proc(tid, &mask) != 0)
+        if (kmp_set_affinity_mask_proc(tid+1, &mask) != 0)
         {
             exit(1);
         }
