@@ -22,11 +22,12 @@
 
 // 2 MB for each object 2 * 1024 * 1024 / sizeof(int)
 #define MAX_ELEMENTS 524288
+
 // batch size is equal to a cache block size
 int BATCH_SIZE=16;
 #undef ACCESSES
+//#define ACCESSES 1000000000
 #define ACCESSES 100000000
-//#define ACCESSES 10000
 
 using namespace std;
 
@@ -38,20 +39,43 @@ class thread_object
 
         thread_object()
         {
-            pthread_mutex_init(&obj_lock, NULL);
-            num_elements = 0;
+            pthread_mutex_init(&obj_lock1, NULL);
+            pthread_mutex_init(&obj_lock2, NULL);
+            num_elements1 = 0;
+            num_elements2 = 0;
             num_elements_consumed = 0;
-            elements = (int *)malloc(2 * 1024 * 1024);
+            elements1 = (int *)malloc(2 * 1024 * 1024);
+            elements2 = (int *)malloc(2 * 1024 * 1024);
+            next = 0;
         }
 
         bool lock()
         {
-            return (pthread_mutex_trylock(&obj_lock));
+            bool id = next;
+            pthread_mutex_t* obj = (id) ? (&obj_lock2) : (&obj_lock1);
+            if (pthread_mutex_trylock(obj) != 0)
+            {
+                id = !id;
+                obj = (id) ? (&obj_lock2) : (&obj_lock1);
+                pthread_mutex_lock(obj);
+            }
+
+            next = !id;
+            return id;
         }
 
-        void unlock()
+        void lock(bool lockid)
         {
-            pthread_mutex_unlock(&obj_lock);
+            pthread_mutex_t* obj = (lockid) ? (&obj_lock2) : (&obj_lock1);
+            pthread_mutex_lock(obj);
+            next = !lockid;
+        }
+
+        void unlock(bool id)
+        {
+            pthread_mutex_t* obj = (id) ? &obj_lock2 : &obj_lock1;
+
+            pthread_mutex_unlock(obj);
         }
 
         inline int elements_consumed()
@@ -61,24 +85,41 @@ class thread_object
 
         void clear()
         {
-            num_elements = 0;
+            num_elements1 = 0;
+            num_elements2 = 0;
             num_elements_consumed = 0;
         }
 
     private:
         int num_elements_consumed;
-        pthread_mutex_t obj_lock;
+        pthread_mutex_t obj_lock1;
+        pthread_mutex_t obj_lock2;
 
         // these are the elements which will be produced and consumed
-        int *elements;
+        int *elements1;
+        int *elements2;
         // the number of elements at present ready to be consumed
-        int num_elements;
+        int num_elements1;
+        int num_elements2;
+        bool next;
 };
 
 long thread_object::produce()
 {
-    if (num_elements == MAX_ELEMENTS)
+    int lockid = lock();
+
+    if (lockid == -1)
         return 0;
+    //printf("producer locks %d\n", lockid); 
+    int& num_elements = (lockid) ? num_elements2 : num_elements1;
+    int* elements = (lockid) ? elements2 : elements1;
+
+    long i = 0;
+    long num_elements_produced = 0;
+    if (num_elements == MAX_ELEMENTS)
+    {
+        goto end;
+    }
 
     if (num_elements > MAX_ELEMENTS)
     {
@@ -86,11 +127,6 @@ long thread_object::produce()
         assert(0);
     }
 
-    int i = 0;
-
-    // try to lock and produce, do not block
-    if (lock() != 0)
-        return 0;
 
     // produce elements
     for (i = num_elements; i < num_elements + BATCH_SIZE; i++)
@@ -101,30 +137,41 @@ long thread_object::produce()
         elements[i] = 1;
     }
 
-    long num_elements_produced = i - num_elements;
+    num_elements_produced = i - num_elements;
     num_elements = i;
 
-    unlock();
-
+end:
+    unlock(lockid);
     return num_elements_produced;
 }
 
 long thread_object::consume()
 {
+    int lockid = lock();
+    //printf("consumer locks %d of tid %d\n", lockid, omp_get_thread_num());
+    int& num_elements = (lockid) ? num_elements2 : num_elements1;
+    int* elements = (lockid) ? elements2 : elements1;
     assert(num_elements >= 0);
+
+    long i = 0;
 
     // no elements to consume
     if (num_elements == 0)
     {
-        //cout << "thread starving " << omp_get_thread_num() << "consumed " << elements_consumed() << endl;
-        return 0;
+        unlock(lockid);
+        //printf("\tconsumer unlocks %d of tid %d", lockid, omp_get_thread_num());
+        lockid = !lockid;
+        lock(lockid);
+        //printf("consumer locks %d of tid %d\n", lockid, omp_get_thread_num());
+        num_elements = (lockid) ? num_elements2 : num_elements1;
+        elements = (lockid) ? elements2 : elements1;
+        if (num_elements == 0)
+            goto end;
     }
 
-    int i = 0;
 
     // there are elements we can consume
     // consume
-    lock();
     for (i = 0; i < BATCH_SIZE; i++)
     {
         num_elements_consumed += elements[--num_elements];
@@ -133,8 +180,10 @@ long thread_object::consume()
             break;
     }
 
-    unlock();
+end:
 
+    unlock(lockid);
+    //printf("consumed %ld\n", i);
     return i;
 }
 
@@ -161,18 +210,19 @@ void *producer(void *arg)
         {
             elements_produced += objects[i].produce();
         }
+        //printf("produced %ld\n", elements_produced);
     }
 
     kmp_destroy_affinity_mask(&mask);
     producing_done = true;
-    //cout << "producer thread exiting " << iter << endl;
+    printf("producer thread exiting, iter %d\n", iter); 
     return NULL;
 }
 
 void consumer(long num_elements_to_consume)
 {
     int num_consumers = omp_get_max_threads();
-    //cout << num_elements_to_consume << endl;
+    printf("each thread will consumer %ld\n", num_elements_to_consume);
 
     #pragma omp parallel for schedule(static)
     for (int i = 0; i < num_consumers; i++)
@@ -202,6 +252,7 @@ void consumer(long num_elements_to_consume)
                 break;
         }
         kmp_destroy_affinity_mask(&mask);
+        printf("\nconsumer thread exiting with tid %d, consumed %d\n", tid, objects[tid].elements_consumed());
     }
 
 }
@@ -209,17 +260,17 @@ void consumer(long num_elements_to_consume)
 int main(int argc, char** argv)
 {
     pthread_t tp;
-    int num_times = 5;
+    int num_times = 1;
     float time_seq = 1, time_par = 0;
     int max_threads = omp_get_max_threads();
     cerr << "Max threads " << max_threads << endl;
 
-    #pragma omp parallel num_threads(7)
+    #pragma omp parallel num_threads(1)
     {
         int test = 0;
     }
     // start producer consumer
-    for (BATCH_SIZE=16384; BATCH_SIZE <= 131072; BATCH_SIZE *=2)
+    for (BATCH_SIZE=512; BATCH_SIZE <= 512; BATCH_SIZE *=2)
     {
         cout << endl << BATCH_SIZE * sizeof(int) << ", " ;
 
