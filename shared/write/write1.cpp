@@ -18,7 +18,7 @@
 #define AI 0
 #define SHARED_PERCENT 10
 
-void stride(int* dest, int* src, int startindex, int endindex, long num_accesses, int64_t block_size)
+void stride(int* dest, int startindex, int endindex, long num_accesses, int64_t block_size)
 {
     int num_threads = omp_get_num_threads();
     int tid = omp_get_thread_num();
@@ -45,7 +45,7 @@ void stride(int* dest, int* src, int startindex, int endindex, long num_accesses
         memcpy(dest+index, local, block_size);
 
         index += block_len; 
-        if (index > endindex)
+        if (index > (endindex - block_len))
             index = startindex;
 
         sum += local[0];

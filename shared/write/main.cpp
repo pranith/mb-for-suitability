@@ -23,7 +23,7 @@ using namespace std;
 
 float Par(int64_t len, int64_t block_size);
 float Seq(int64_t len, int64_t block_size);
-void stride(int* dest, int* src, int startindex, int endindex, long num_accesses, int64_t block_size);
+void stride(int* dest, int startindex, int endindex, long num_accesses, int64_t block_size);
 
 bool test = 0;
 
@@ -69,7 +69,6 @@ int main(int argc, char** argv)
 
 float Par(int64_t len, int64_t block_size)
 {
-    int* src   = (int*)malloc(sizeof(int) * len);
     int* dest   = (int*)malloc(sizeof(int) * len);
 
     struct timeval before, after;
@@ -82,19 +81,17 @@ float Par(int64_t len, int64_t block_size)
         int num_threads = omp_get_num_threads();
         int startindex = tid * len / num_threads;
         int endindex = ((tid + 1) * len / num_threads) - 1;
-        stride(dest, src, startindex, endindex, ACCESSES / num_threads, block_size);
+        stride(dest, startindex, endindex, ACCESSES / num_threads, block_size);
     }
     recordTime(after);
 
     testfinal();
-    free(src);
     free(dest);
     return diffTime(before, after, "Par");
 }
 
 float Seq(int64_t len, int64_t block_size) 
 {
-    int* src   = (int*)malloc(sizeof(int) * len);
     int* dest   = (int*)malloc(sizeof(int) * len);
 
     struct timeval before, after;
@@ -106,12 +103,11 @@ float Seq(int64_t len, int64_t block_size)
         int num_threads = omp_get_num_threads();
         int startindex = tid * len / num_threads;
         int endindex = ((tid + 1) * len / num_threads) - 1;
-        stride(dest, src, startindex, endindex, ACCESSES / num_threads, block_size);
+        stride(dest, startindex, endindex, ACCESSES / num_threads, block_size);
     }
     recordTime(after);
 
     testfinal();
-    free(src);
     free(dest);
     return diffTime(before, after, "Seq");
 }

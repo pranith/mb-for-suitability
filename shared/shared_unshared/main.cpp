@@ -46,9 +46,9 @@ int main(int argc, char** argv)
     }
     assert(len     > 0);
 
-    for (int shared_acc = 2; shared_acc <= 10; shared_acc += 2)
+    for (int shared_acc = 10; shared_acc <= 50; shared_acc += 10)
     {
-        for (int shared_mem = 2; shared_mem <= 10; shared_mem += 2)
+        for (int shared_mem = 10; shared_mem <= 50; shared_mem += 10)
         {
             for (int block_size = start_block_size; block_size < max_block_size; block_size *= 2)
             {
