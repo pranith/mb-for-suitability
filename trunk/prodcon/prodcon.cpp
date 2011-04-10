@@ -25,7 +25,7 @@
 // batch size is equal to a cache block size
 int BATCH_SIZE=16;
 #undef ACCESSES
-#define ACCESSES 100000000
+#define ACCESSES 1000000000
 //#define ACCESSES 10000
 
 using namespace std;
@@ -214,12 +214,12 @@ int main(int argc, char** argv)
     int max_threads = omp_get_max_threads();
     cerr << "Max threads " << max_threads << endl;
 
-    #pragma omp parallel num_threads(7)
+    #pragma omp parallel num_threads(max_threads-1)
     {
         int test = 0;
     }
     // start producer consumer
-    for (BATCH_SIZE=16384; BATCH_SIZE <= 131072; BATCH_SIZE *=2)
+    for (BATCH_SIZE=2048; BATCH_SIZE <= 1024 * 1024; BATCH_SIZE *=2)
     {
         cout << endl << BATCH_SIZE * sizeof(int) << ", " ;
 

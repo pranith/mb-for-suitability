@@ -44,7 +44,7 @@ void stride(int* dest, int* src, int startindex, int endindex, long num_accesses
         memcpy(dest+index, src+index, block_size);
 
         index += block_len; 
-        if (index > endindex)
+        if (index > (endindex - block_len))
             index = startindex;
 
         sum += dest[index];
