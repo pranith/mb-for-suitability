@@ -31,12 +31,12 @@ bool test = 0;
 
 int main(int argc, char** argv)
 {
-    int64_t start_len = 1024 * 1024 * 2 / sizeof(int); // 2 MB
+    int64_t start_len = 1024 * 1024 * 1024 / sizeof(int); // 2 MB
     int start_block_size = CACHE_LINE_SIZE;
     int max_threads = omp_get_max_threads();
     cout << "max_threads : " << max_threads << endl;
-    int max_array_len = 1024 * 1024 * 1024 / sizeof(int); // 1024 MB
-    int max_block_size = 256;
+    uint64_t max_array_len = 1024 * 1024 * (10240 / sizeof(int)); // 1024 MB
+    int max_block_size = 128;
 
     int64_t len = start_len; // length of the array
     if (test)
@@ -50,14 +50,13 @@ int main(int argc, char** argv)
     {
         for (int shared_mem = 10; shared_mem <= 50; shared_mem += 10)
         {
+            cout << " shared_acc, shared_mem, size(MB),time(seq),num_threads=2;" \
+                << ",num_threads=4; "<< endl;
             for (int block_size = start_block_size; block_size < max_block_size; block_size *= 2)
             {
-                cout << "Shared accesses " << shared_acc << " Shared memory " << shared_mem << endl;
-                cout << " size(MB),time(seq),num_threads=2; block_size="<< block_size \
-                    << ",num_threads=4; block_size="<< block_size << endl;
-                for (len = start_len; len < max_array_len; len *= 2)
+                for (len = start_len; len < max_array_len; len += start_len)
                 {
-                    cout << (len * sizeof(int)) / (1024 * 1024); // printing size in MB
+                    cout << shared_acc << ", " << shared_mem << ", " << (len * sizeof(int)) / (1024 * 1024); // printing size in MB
                     float time_seq = Seq(len, block_size, shared_acc, shared_mem);
                     cout << ", " << time_seq;
                     for (int num_threads = 2; num_threads <= max_threads; num_threads *= 2)
@@ -76,7 +75,6 @@ int main(int argc, char** argv)
             }
         }
     }
-
 
     return 0;
 }
