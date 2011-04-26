@@ -36,7 +36,7 @@ void stride(int* dest, int* src, int startindex, int endindex, long num_accesses
         memcpy(local, src+index, block_len);
 
         index += block_len;
-        if (index > endindex)
+        if (index > (endindex - block_len))
             index = startindex;
 
         sum += local[0];
@@ -59,7 +59,7 @@ void stride(int* dest, int* src, int startindex, int endindex, long num_accesses
         }
 
         shared_index += block_len;
-        if (shared_index > shared_array_len)
+        if (shared_index > (shared_array_len - block_len))
             shared_index = 0;
 
         mode = !mode;
