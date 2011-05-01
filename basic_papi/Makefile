@@ -6,7 +6,7 @@ IDIR = .
 CC = gcc
 CFLAGS = -lpapi -Wall $(DEBUG) -I$(IDIR)
 
-EXEC = read64_dependent.exe read64_base.exe # read64_dependent2.exe read64_independent2.exe read64_independent3.exe
+EXEC = read64_dependent.exe read64_base.exe read64_independent_0.exe read64_independent_2.exe read64_independent_4.exe read64_independent_6.exe read64_independent_8.exe
 
 all: $(EXEC)
 
