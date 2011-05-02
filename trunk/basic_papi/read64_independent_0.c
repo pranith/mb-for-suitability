@@ -36,7 +36,7 @@ int test()
   volatile long dest1, dest2, dest3, dest4, dest5, dest6, dest7, dest8;
   int num_mem_ops = 8;
 
-  unsigned long num_iter = 5000000000 / num_mem_ops;
+  unsigned long num_iter = 500000000 / num_mem_ops;
   struct timeval before, after;
 
   //initialize array

@@ -20,7 +20,6 @@ main( int argc, char **argv )
 	PAPI_event_info_t evinfo;
 	PAPI_mh_level_t *L;
 
-    int info[6];
 
 	const int eventlist[] = {
 		PAPI_L1_DCA,
@@ -29,8 +28,20 @@ main( int argc, char **argv )
 		PAPI_L2_DCA,
 		PAPI_L2_DCM,
 		PAPI_L2_DCH,
+        PAPI_L3_DCA,
+        PAPI_L3_TCM,
+        PAPI_L3_LDM,
+        PAPI_LST_INS,
+        PAPI_TOT_CYC,
+        PAPI_TLB_DM,
+        PAPI_TOT_INS,
 		0
 	};
+
+    double info[13];
+
+    for (i = 0; i < 13; i++)
+      info[i] = 0;
 
 	tests_quiet( argc, argv );	/* Set TESTS_QUIET variable */
 
@@ -145,12 +156,18 @@ main( int argc, char **argv )
               PAPI_remove_event( EventSet, eventlist[i] ) ) != PAPI_OK )
           test_fail( __FILE__, __LINE__, "PAPI_remove_event", retval );
 
-        info[i] = ( values[0] + values[1] ) / 2;
-        printf("avg value %d\n", info[i]);
+        info[i] =  (values[0] + values[1]) / 2;
     }
 
-    printf("L1 cache miss ratio = %f\n", info[1] / (float)info[0]);
-    printf("L2 cache miss ratio = %f\n", info[4] / (float)info[3]);
+    for (i = 0; i < 13; i++)
+    {
+		if ( PAPI_get_event_info( eventlist[i], &evinfo ) != PAPI_OK )
+			test_fail( __FILE__, __LINE__, "PAPI_get_event_info", retval );
+		printf( "\nEvent: %s\tShort: %s\t\t\t\t",
+				evinfo.symbol, evinfo.short_descr );
+        printf(" %e", info[i]);
+    }
+
     if ( ( retval = PAPI_destroy_eventset( &EventSet ) ) != PAPI_OK )
       test_fail( __FILE__, __LINE__, "PAPI_destroy_eventset", retval );
 

@@ -19,6 +19,9 @@ float diffTime(struct timeval before, struct timeval after)
   return time_sec;
 }
 
+void pranith_start() {}
+void pranith_stop() {}
+
 int main()
 {
   unsigned long size = 256 * 1024 * 1024 / sizeof(long); // 256 MB
@@ -27,12 +30,12 @@ int main()
   volatile long dest;
   int num_mem_ops = 400;
 
-  unsigned long num_iter = 5000000000 / num_mem_ops;
+  unsigned long num_iter = 4000;// / num_mem_ops;
   struct timeval before, after;
 
   //initialize array
   for (j = 0; j < size; j++)
-    src[j] = 1;
+    src[j] = 8;
 
   int inc = 1;
   int max = inc * 400;
@@ -43,9 +46,10 @@ int main()
    *
    * this will generate 'n' requests over the entire iteration
    */
-  for (num_req = 0; num_req < 400; num_req++)
+  for (num_req = 1; num_req < 2; num_req+=1)
   {
     fprintf(stderr, "trying for num_req %d\n", num_req);
+    pranith_start();
     recordTime(&before);
     for(j = 0; j < num_iter; j++)
     {
@@ -449,7 +453,7 @@ int main()
       dest = src[i + ((num_req * 397) / 50)];
       dest = src[i + ((num_req * 398) / 50)];
       dest = src[i + ((num_req * 399) / 50)];
-      i += (8 * num_req);
+      i += (dest * num_req);
 
       if (i + (num_req * 399)/50 >= size)
         i = 0;
@@ -457,6 +461,7 @@ int main()
       final += dest;
     }
     recordTime(&after);
+    pranith_stop();
     printf("%d %f\n", num_req, diffTime(before, after));
     fprintf(stderr, "%d %f\n", num_req, diffTime(before, after));
     fflush(NULL);
