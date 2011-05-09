@@ -31,7 +31,9 @@ void stride(int* dest, int* src, int startindex, int endindex, long num_accesses
     // unshared accesses
     for (long i = 0; i < num_accesses_unshared; i++)
     {
-        memcpy(local, src+index, block_size);
+        //memcpy(local, src+index, block_size);
+        for (int j = 0; j < block_len; j++)
+          local[j] = src[index+j];
 
         index += block_len;
         if (index > (endindex - block_len))
@@ -44,7 +46,9 @@ void stride(int* dest, int* src, int startindex, int endindex, long num_accesses
     index = 0;
     for (long i = 0; i < num_accesses_shared; i++)
     {
-        memcpy(local, dest+index, block_size);
+        //memcpy(local, dest+index, block_size);
+        for (int j = 0; j < block_len; j++)
+          local[j] = src[index+j];
 
         index += block_len;
 

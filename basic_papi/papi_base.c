@@ -6,6 +6,8 @@
 #define OUT_FMT		"%12d\t%12lld\t%12lld\t%.2f\n"
 #endif
 
+#define array_size(a) sizeof(a)/sizeof(a[0])
+
 int test();
 int warmup();
 
@@ -22,6 +24,8 @@ main( int argc, char **argv )
 
 
 	const int eventlist[] = {
+      /*
+        */
 		PAPI_L1_DCA,
 		PAPI_L1_DCM,
 		PAPI_L1_DCH,
@@ -32,15 +36,20 @@ main( int argc, char **argv )
         PAPI_L3_TCM,
         PAPI_L3_LDM,
         PAPI_LST_INS,
+        PAPI_LD_INS,
+        PAPI_SR_INS,
         PAPI_TOT_CYC,
         PAPI_TLB_DM,
+        PAPI_RES_STL,
+        PAPI_TOT_IIS,
         PAPI_TOT_INS,
 		0
 	};
 
-    double info[13];
+    int arr_size = array_size(eventlist) - 1;
+    double info[arr_size];
 
-    for (i = 0; i < 13; i++)
+    for (i = 0; i < arr_size; i++)
       info[i] = 0;
 
 	tests_quiet( argc, argv );	/* Set TESTS_QUIET variable */
@@ -156,16 +165,16 @@ main( int argc, char **argv )
               PAPI_remove_event( EventSet, eventlist[i] ) ) != PAPI_OK )
           test_fail( __FILE__, __LINE__, "PAPI_remove_event", retval );
 
-        info[i] =  (values[0] + values[1]) / 2;
+        info[i] =  (values[0]/2 + values[1]/2);
     }
 
-    for (i = 0; i < 13; i++)
+    for (i = 0; i < arr_size; i++)
     {
 		if ( PAPI_get_event_info( eventlist[i], &evinfo ) != PAPI_OK )
 			test_fail( __FILE__, __LINE__, "PAPI_get_event_info", retval );
-		printf( "\nEvent: %s\tShort: %s\t\t\t\t",
+		printf( "Event: %s\tShort: %s\t\t\t\t",
 				evinfo.symbol, evinfo.short_descr );
-        printf(" %e", info[i]);
+        printf(" %e\n", info[i]);
     }
 
     if ( ( retval = PAPI_destroy_eventset( &EventSet ) ) != PAPI_OK )
@@ -175,4 +184,3 @@ main( int argc, char **argv )
 
     exit( 1 );
 }
-

@@ -7,7 +7,13 @@
 #include <stdlib.h>
 
 long *src;
+int *indexarr;
 long result;
+unsigned long size;
+int num_req = 0;
+
+void pranith_start() { printf("start record... from app\n");}
+void pranith_stop() { printf("stop record... from app\n");}
 
 void recordTime(struct timeval* current)
 {
@@ -23,44 +29,50 @@ float diffTime(struct timeval before, struct timeval after)
     return time_sec;
 }
 
-int main(int argc, char* argv[])
+void warmup()
 {
-  unsigned long size = 256 * 1024 * 1024 / sizeof(long); // 256 MB
+  unsigned long j = 0;
+  size = 256 * 1024 * 1024 / sizeof(long); // 256 MB
   src = (long *)malloc(sizeof(long) * size);
-  unsigned long i = 0, j, k = 0, l;
-  volatile long dest;
-  int num_mem_ops = 8;
+  indexarr = (int *)malloc(sizeof(int) * 400);
 
-  unsigned long num_iter = 5000000000 / num_mem_ops;
-  struct timeval before, after;
+  for (j = 0; j < 400; j++)
+  {
+    indexarr[j] = (num_req * j) / 50;
+  }
 
   //initialize array
   for (j = 0; j < size; j++)
-    src[j] = 8;
+    src[j] = 3200;
+}
 
-  int inc = 1;
+int main()
+{
+  unsigned long i = 0, j;
+  int num_mem_ops = 400;
+
+  volatile unsigned long dest;
+  unsigned long num_iter = 200000000000 / num_mem_ops;
+  struct timeval before, after;
+
+  warmup();
+  pranith_start();
   recordTime(&before);
   for(j = 0; j < num_iter; j++)
   {
-    l = i;
-    #pragma unroll
-    for (k = 0; k < 400; k++)
-    {
-      dest += src[l];
-      l += inc;
-    }
+    dest = src[i + indexarr[0]];
 
-    /* make subsequent iterations dependent on previous iterations */
     i += dest;
-    dest = 0;
-
-    if (i+max >= size)
+    if (i+3200 >= size)
       i = 0;
   }
   recordTime(&after);
+  pranith_stop();
 
-  result = i + dest;
+  result += i;
 
-  printf("num req %d time taken %f\n", num_req, diffTime(before, after));
+  printf("time taken %f\n", diffTime(before, after));
+  printf("Num iter %d M\n", (int) (num_iter / 1000000));
   return 0;
 }
+
