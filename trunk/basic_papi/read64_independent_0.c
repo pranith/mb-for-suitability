@@ -26,8 +26,12 @@ float diffTime(struct timeval before, struct timeval after)
 
 void warmup()
 {
+  unsigned long j;
   size = 256 * 1024 * 1024 / sizeof(long); // 256 MB
   src = (long *)malloc(sizeof(long) * size);
+  //initialize array
+  for (j = 0; j < size; j++)
+    src[j] = 1;
 }
 
 int test()
@@ -36,12 +40,9 @@ int test()
   volatile long dest1, dest2, dest3, dest4, dest5, dest6, dest7, dest8;
   int num_mem_ops = 8;
 
-  unsigned long num_iter = 500000000 / num_mem_ops;
+  unsigned long num_iter = 5000000000 / num_mem_ops;
   struct timeval before, after;
 
-  //initialize array
-  for (j = 0; j < size; j++)
-    src[j] = 1;
 
   recordTime(&before);
   for(j = 0; j < num_iter; j++)
@@ -63,6 +64,7 @@ int test()
   }
   recordTime(&after);
 
+  result = i + dest1 + dest2 + dest3 + dest4 + dest5 + dest6 + dest7 + dest8;
   printf("time taken %f\n", diffTime(before, after));
   return 0;
 }
